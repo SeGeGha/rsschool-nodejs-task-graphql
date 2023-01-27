@@ -6,6 +6,7 @@ import { graphqlBodySchema } from './schema';
 const schema = buildSchema(`
   type Query {
     users: [User]
+    profiles: [Profile]
   }
   
   type User {
@@ -15,11 +16,26 @@ const schema = buildSchema(`
     email: String
     subscribedToUserIds: [String]
   }
+  
+  type Profile {
+    id: String
+    avatar: String
+    sex: String
+    birthday: Int
+    country: String
+    street: String
+    city: String
+    memberTypeId: String
+    userId: String
+  }
 `);
 
 const rootValue = {
   async users(args: any, fastify: FastifyInstance) {
     return fastify.db.users.findMany();
+  },
+  async profiles(args: any, fastify: FastifyInstance) {
+    return fastify.db.profiles.findMany();
   },
 }
 
