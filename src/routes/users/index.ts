@@ -73,6 +73,17 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
           await this.db.users.change(updatedUser.id, updatedUser);
         }
 
+        const profile = await this.db.profiles.findOne({ key: 'userId', equals: removedUser.id });
+        if (profile) {
+          await this.db.profiles.delete(profile.id);
+        }
+
+        const posts = await this.db.posts.findMany({ key: 'userId', equals: removedUser.id });
+
+        for (let i = 0; i < posts.length; i++) {
+          await this.db.posts.delete(posts[i].id);
+        }
+
         return removedUser;
       } catch (error) {
         throw reply.notFound(`User with id ${id} not found`);
