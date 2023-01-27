@@ -7,6 +7,7 @@ const schema = buildSchema(`
   type Query {
     users: [User]
     profiles: [Profile]
+    posts: [Post]
   }
   
   type User {
@@ -28,6 +29,13 @@ const schema = buildSchema(`
     memberTypeId: String
     userId: String
   }
+  
+  type Post {
+    id: String
+    title: String
+    content: String
+    userId: String
+  }
 `);
 
 const rootValue = {
@@ -36,6 +44,9 @@ const rootValue = {
   },
   async profiles(args: any, fastify: FastifyInstance) {
     return fastify.db.profiles.findMany();
+  },
+  async posts(args: any, fastify: FastifyInstance) {
+    return fastify.db.posts.findMany();
   },
 }
 
