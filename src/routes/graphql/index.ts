@@ -1,26 +1,46 @@
-import { FastifyInstance } from 'fastify';
 import { graphql, buildSchema } from 'graphql';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
+import { resolvers } from './resolvers';
 
 const schema = buildSchema(`
   type Query {
-    users: [User]
-    profiles: [Profile]
-    posts: [Post]
-    memberTypes: [MemberType]
+    getUsers: [User]
+    getUser(id: String!): User
+    getUsersWithInfo: [UserWithInfo]
+    getUserWithInfo(id: String!): UserWithInfo
+    
+    getProfiles: [Profile]
+    getProfile(id: String!): User
+    
+    getPosts: [Post]
+    getPost(id: String!): User
+    
+    getMemberTypes: [MemberType]
+    getMemberType(id: String!): User
   }
   
   type User {
-    id: String
-    firstName: String
-    lastName: String
-    email: String
-    subscribedToUserIds: [String]
+    id: String!
+    firstName: String!
+    lastName: String!
+    email: String!
+    subscribedToUserIds: [String]!
+  }
+  
+  type UserWithInfo {
+    id: String!
+    firstName: String!
+    lastName: String!
+    email: String!
+    subscribedToUserIds: [String]!
+    posts: [Post]
+    profile: Profile
+    memberType: MemberType
   }
   
   type Profile {
-    id: String
+    id: String!
     avatar: String
     sex: String
     birthday: Int
@@ -32,33 +52,18 @@ const schema = buildSchema(`
   }
   
   type Post {
-    id: String
+    id: String!
     title: String
     content: String
     userId: String
   }
   
   type MemberType {
-    id: String
+    id: String!
     discount: Int
     monthPostsLimit: Int
   }
 `);
-
-const rootValue = {
-  async users(args: any, fastify: FastifyInstance) {
-    return fastify.db.users.findMany();
-  },
-  async profiles(args: any, fastify: FastifyInstance) {
-    return fastify.db.profiles.findMany();
-  },
-  async posts(args: any, fastify: FastifyInstance) {
-    return fastify.db.posts.findMany();
-  },
-  async memberTypes(args: any, fastify: FastifyInstance) {
-    return fastify.db.memberTypes.findMany();
-  },
-}
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -73,7 +78,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply) {
       return await graphql({
         schema,
-        rootValue,
+        rootValue     : resolvers,
         source        : String(request.body.query),
         variableValues: request.body.variables,
         contextValue  : fastify,
