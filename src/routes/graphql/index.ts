@@ -1,20 +1,27 @@
-import { graphql, GraphQLObjectType, GraphQLSchema } from 'graphql';
+import { FastifyInstance } from 'fastify';
+import { graphql, buildSchema } from 'graphql';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
 
-const querySchema = new GraphQLObjectType({
-  name: 'Query',
-  fields: {
-
+const schema = buildSchema(`
+  type Query {
+    users: [User]
   }
-});
-
-const mutationSchema = new GraphQLObjectType({
-  name: 'Mutation',
-  fields: {
-
+  
+  type User {
+    id: String
+    firstName: String
+    lastName: String
+    email: String
+    subscribedToUserIds: [String]
   }
-});
+`);
+
+const rootValue = {
+  async users(args: any, fastify: FastifyInstance) {
+    return fastify.db.users.findMany();
+  },
+}
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -28,10 +35,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply) {
       return await graphql({
-        schema        : new GraphQLSchema({
-          query   : querySchema,
-          mutation: mutationSchema,
-        }),
+        schema,
+        rootValue,
         source        : String(request.body.query),
         variableValues: request.body.variables,
         contextValue  : fastify,
