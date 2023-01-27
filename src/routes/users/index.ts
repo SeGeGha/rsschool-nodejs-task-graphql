@@ -1,7 +1,7 @@
 import * as lodash from 'lodash';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { idParamSchema } from '../../utils/reusedSchemas';
-import { validateId } from '../../utils/userIdValidator';
+import { validateId } from '../../utils/uuidValidator';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
 import {
   createUserBodySchema,
