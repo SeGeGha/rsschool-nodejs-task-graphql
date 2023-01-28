@@ -44,9 +44,7 @@ export const userMutations = {
       lastName : { type: GraphQLString },
       email    : { type: GraphQLString },
     },
-    resolve: async (_: any, args: Omit<UserEntity, 'id' | 'subscribedToUserIds'>, fastify: FastifyInstance) => {
-      return fastify.db.users.create(args);
-    },
+    resolve: async (_: any, userDTO: Omit<UserEntity, 'id' | 'subscribedToUserIds'>, fastify: FastifyInstance) => fastify.db.users.create(userDTO),
   },
   updateUser: {
     type   : userType,
@@ -57,9 +55,9 @@ export const userMutations = {
       email    : { type: GraphQLString },
     },
     resolve: async (_: any, args: Record<'id', string> & Partial<Omit<UserEntity, 'id'>>, fastify: FastifyInstance) => {
-      const { id, ...userDto } = args;
+      const { id, ...userDTO } = args;
 
-      return fastify.db.users.change(id, userDto);
+      return fastify.db.users.change(id, userDTO);
     },
   }
 }

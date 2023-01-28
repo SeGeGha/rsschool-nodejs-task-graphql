@@ -3,7 +3,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { graphqlBodySchema } from './schema';
 import {
   usersQuery, userQuery, userMutations,
-  profilesQuery, profileQuery,
+  profilesQuery, profileQuery, profileMutations,
   postsQuery, postQuery,
   memberTypesQuery, memberTypeQuery,
 } from './types';
@@ -29,6 +29,8 @@ const mutationRootType = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
     createUser: userMutations.createUser,
+
+    createProfile: profileMutations.createProfile,
   }
 });
 
