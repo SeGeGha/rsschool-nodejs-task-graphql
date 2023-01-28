@@ -38,6 +38,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
+      const { userId } = request.body as Omit<PostEntity, 'id'>;
+
+      const user = await this.db.users.findOne({ key: 'id', equals: userId });
+      if (!user) {
+        throw reply.badRequest(`Invalid user id - ${userId}`);
+      }
+
       return this.db.posts.create(request.body as Omit<PostEntity, 'id'>);
     }
   );

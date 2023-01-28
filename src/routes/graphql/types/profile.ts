@@ -33,7 +33,14 @@ export const profilesQuery = {
 export const profileQuery = {
   type   : profileType,
   args   : { id: { type: GraphQLID } },
-  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.profiles.findOne({ key: 'id', equals: id }),
+  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
+    const profile = await fastify.db.profiles.findOne({ key: 'id', equals: id });
+    if (!profile) {
+      throw fastify.httpErrors.notFound(`Profile with id ${id} not found`);
+    }
+
+    return profile;
+  },
 };
 
 export const profileMutations = {
@@ -86,6 +93,14 @@ export const profileMutations = {
       const { id, ...profileDTO } = args;
       if (!validateId(id)) {
         throw fastify.httpErrors.badRequest(`Invalid profile id - ${id}`);
+      }
+
+      const { memberTypeId } = profileDTO;
+      if (memberTypeId) {
+        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: memberTypeId });
+        if (!memberType) {
+          throw fastify.httpErrors.badRequest(`Invalid memberType id - ${memberTypeId}`);
+        }
       }
 
       try {

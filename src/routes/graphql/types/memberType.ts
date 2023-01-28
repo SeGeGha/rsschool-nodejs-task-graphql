@@ -19,7 +19,14 @@ export const memberTypesQuery = {
 export const memberTypeQuery = {
   type   : memberType,
   args   : { id: { type: GraphQLString } },
-  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.memberTypes.findOne({ key: 'id', equals: id }),
+  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
+    const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: id })
+    if (!memberType) {
+      throw fastify.httpErrors.notFound(`Member type with id ${id} not found`);
+    }
+
+    return memberType;
+  },
 };
 
 export const memberTypeMutations = {

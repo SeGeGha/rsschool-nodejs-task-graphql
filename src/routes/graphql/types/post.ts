@@ -21,7 +21,14 @@ export const postsQuery = {
 export const postQuery = {
   type   : postType,
   args   : { id: { type: GraphQLID } },
-  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.posts.findOne({ key: 'id', equals: id }),
+  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
+    const post = await fastify.db.posts.findOne({ key: 'id', equals: id });
+    if (!post) {
+      throw fastify.httpErrors.notFound(`Post with id ${id} not found`);
+    }
+
+    return post;
+  },
 };
 
 export const postMutations = {

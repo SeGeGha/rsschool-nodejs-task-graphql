@@ -41,13 +41,20 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<ProfileEntity> {
       const { memberTypeId, userId } = request.body as ProfileEntity;
+
       const memberType = await this.db.memberTypes.findOne({ key: 'id', equals: memberTypeId });
       if (!memberType) {
         throw reply.badRequest(`Invalid member type id ${memberTypeId}`);
       }
+
+      const user = await this.db.users.findOne({ key: 'id', equals: userId });
+      if (!user) {
+        throw reply.badRequest(`Invalid user id - ${userId}`);
+      }
+
       const userProfile = await this.db.profiles.findOne({ key: 'userId', equals: userId });
       if (userProfile) {
-        throw reply.badRequest(`User has profile`);
+        throw reply.badRequest(`User has profile: profile id - ${userProfile.id}`);
       }
 
       return this.db.profiles.create(request.body as Omit<ProfileEntity, 'id' | 'subscribedToUserIds'>);
@@ -87,6 +94,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       const { id } = request.params as Record<'id', string>;
       if (!validateId(id)) {
         throw reply.badRequest(`Invalid profile id ${id}`);
+      }
+
+      const { memberTypeId } = request.body as Partial<Omit<ProfileEntity, 'id' | 'userId'>>;
+      if (memberTypeId) {
+        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: memberTypeId });
+        if (!memberType) {
+          throw fastify.httpErrors.badRequest(`Invalid memberType id - ${memberTypeId}`);
+        }
       }
 
       try {

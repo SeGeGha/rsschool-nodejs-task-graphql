@@ -44,7 +44,14 @@ export const usersQuery = {
 export const userQuery = {
   type   : userType,
   args   : { id: { type: GraphQLID } },
-  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.users.findOne({ key: 'id', equals: id }),
+  resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
+    const user = await fastify.db.users.findOne({ key: 'id', equals: id })
+    if (!user) {
+      throw fastify.httpErrors.notFound(`User with id ${id} not found`);
+    }
+
+    return user;
+  },
 };
 
 export const userMutations = {
