@@ -1,69 +1,29 @@
-import { graphql, buildSchema } from 'graphql';
+import { graphql, GraphQLSchema, GraphQLObjectType } from 'graphql';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
-import { resolvers } from './resolvers';
+import {
+  usersQuery, userQuery,
+  profilesQuery, profileQuery,
+  postsQuery, postQuery,
+  memberTypesQuery, memberTypeQuery,
+} from './types';
 
-const schema = buildSchema(`
-  type Query {
-    getUsers: [User]
-    getUser(id: String!): User
-    getUsersWithInfo: [UserWithInfo]
-    getUserWithInfo(id: String!): UserWithInfo
-    
-    getProfiles: [Profile]
-    getProfile(id: String!): User
-    
-    getPosts: [Post]
-    getPost(id: String!): User
-    
-    getMemberTypes: [MemberType]
-    getMemberType(id: String!): User
-  }
-  
-  type User {
-    id: String!
-    firstName: String!
-    lastName: String!
-    email: String!
-    subscribedToUserIds: [String]!
-  }
-  
-  type UserWithInfo {
-    id: String!
-    firstName: String!
-    lastName: String!
-    email: String!
-    subscribedToUserIds: [String]!
-    posts: [Post]
-    profile: Profile
-    memberType: MemberType
-  }
-  
-  type Profile {
-    id: String!
-    avatar: String
-    sex: String
-    birthday: Int
-    country: String
-    street: String
-    city: String
-    memberTypeId: String
-    userId: String
-  }
-  
-  type Post {
-    id: String!
-    title: String
-    content: String
-    userId: String
-  }
-  
-  type MemberType {
-    id: String!
-    discount: Int
-    monthPostsLimit: Int
-  }
-`);
+const queryRootType = new GraphQLObjectType({
+  name  : 'Query',
+  fields: {
+    users: usersQuery,
+    user : userQuery,
+
+    profiles: profilesQuery,
+    profile : profileQuery,
+
+    posts: postsQuery,
+    post : postQuery,
+
+    memberTypes: memberTypesQuery,
+    memberType : memberTypeQuery,
+  },
+});
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -77,8 +37,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply) {
       return await graphql({
-        schema,
-        rootValue     : resolvers,
+        schema        : new GraphQLSchema({
+          query   : queryRootType,
+          mutation: null,
+        }),
         source        : String(request.body.query),
         variableValues: request.body.variables,
         contextValue  : fastify,
