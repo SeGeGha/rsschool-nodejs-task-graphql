@@ -5,7 +5,7 @@ import {
   usersQuery, userQuery, userMutations,
   profilesQuery, profileQuery, profileMutations,
   postsQuery, postQuery, postMutations,
-  memberTypesQuery, memberTypeQuery,
+  memberTypesQuery, memberTypeQuery,memberTypeMutations
 } from './types';
 
 const queryRootType = new GraphQLObjectType({
@@ -36,7 +36,9 @@ const mutationRootType = new GraphQLObjectType({
 
     createPost: postMutations.createPost,
     updatePost: postMutations.updatePost,
-  }
+
+    updateMemberType: memberTypeMutations.updateMemberType,
+  },
 });
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
