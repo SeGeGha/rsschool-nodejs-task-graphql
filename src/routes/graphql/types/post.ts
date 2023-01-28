@@ -8,7 +8,7 @@ export const postType = new GraphQLObjectType({
     id     : { type: GraphQLID },
     title  : { type: GraphQLString },
     content: { type: GraphQLString },
-    userId : { type: GraphQLString },
+    userId : { type: GraphQLID },
   },
 });
 
@@ -19,7 +19,7 @@ export const postsQuery = {
 
 export const postQuery = {
   type   : postType,
-  args   : { id: { type: GraphQLString } },
+  args   : { id: { type: GraphQLID } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.posts.findOne({ key: 'id', equals: id }),
 };
 
@@ -29,7 +29,7 @@ export const postMutations = {
     args: {
       title  : { type: GraphQLString },
       content: { type: GraphQLString },
-      userId : { type: GraphQLString },
+      userId : { type: GraphQLID },
     },
     resolve: async (_: any, postDTO: Omit<PostEntity, 'id'>, fastify: FastifyInstance) => {
       const { userId } = postDTO;

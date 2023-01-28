@@ -33,7 +33,7 @@ export const usersQuery = {
 
 export const userQuery = {
   type   : userType,
-  args   : { id: { type: GraphQLString } },
+  args   : { id: { type: GraphQLID } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => fastify.db.users.findOne({ key: 'id', equals: id }),
 };
 
@@ -50,7 +50,7 @@ export const userMutations = {
   updateUser: {
     type   : userType,
     args   : {
-      id       : { type: new GraphQLNonNull(GraphQLString) },
+      id       : { type: new GraphQLNonNull(GraphQLID) },
       firstName: { type: GraphQLString },
       lastName : { type: GraphQLString },
       email    : { type: GraphQLString },

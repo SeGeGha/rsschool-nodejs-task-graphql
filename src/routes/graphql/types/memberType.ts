@@ -1,10 +1,10 @@
-import {GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString} from 'graphql';
+import { GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
 import { FastifyInstance } from 'fastify';
 
 export const memberType = new GraphQLObjectType({
   name  : 'MemberType',
   fields: {
-    id             : { type: GraphQLID },
+    id             : { type: GraphQLString },
     discount       : { type: GraphQLInt },
     monthPostsLimit: { type: GraphQLInt },
   },
