@@ -28,8 +28,11 @@ const queryRootType = new GraphQLObjectType({
 const mutationRootType = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
-    createUser: userMutations.createUser,
-    updateUser: userMutations.updateUser,
+    createUser : userMutations.createUser,
+    updateUser : userMutations.updateUser,
+
+    subscribeTo    : userMutations.subscribeTo,
+    unsubscribeFrom: userMutations.unsubscribeFrom,
 
     createProfile: profileMutations.createProfile,
     updateProfile: profileMutations.updateProfile,
