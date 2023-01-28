@@ -4,7 +4,7 @@ import { graphqlBodySchema } from './schema';
 import {
   usersQuery, userQuery, userMutations,
   profilesQuery, profileQuery, profileMutations,
-  postsQuery, postQuery,
+  postsQuery, postQuery, postMutations,
   memberTypesQuery, memberTypeQuery,
 } from './types';
 
@@ -31,6 +31,8 @@ const mutationRootType = new GraphQLObjectType({
     createUser: userMutations.createUser,
 
     createProfile: profileMutations.createProfile,
+
+    createPost: postMutations.createPost,
   }
 });
 
