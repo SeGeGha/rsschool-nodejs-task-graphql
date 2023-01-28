@@ -5,6 +5,7 @@ import { FastifyInstance } from 'fastify';
 import { profileType } from './profile';
 import { postType } from './post';
 import { UserEntity } from '../../../utils/DB/entities/DBUsers';
+import { validateId } from '../../../utils/uuidValidator';
 
 export const userType = new GraphQLObjectType({
   name  : 'User',
@@ -56,8 +57,15 @@ export const userMutations = {
     },
     resolve: async (_: any, args: Record<'id', string> & Partial<Omit<UserEntity, 'id'>>, fastify: FastifyInstance) => {
       const { id, ...userDTO } = args;
+      if (!validateId(id)) {
+        throw fastify.httpErrors.badRequest(`Invalid user id - ${id}`);
+      }
 
-      return fastify.db.users.change(id, userDTO);
+      try {
+        return await fastify.db.users.change(id, userDTO);
+      } catch (error) {
+        throw fastify.httpErrors.notFound(`User with id ${id} not found`);
+      }
     },
   }
 }
