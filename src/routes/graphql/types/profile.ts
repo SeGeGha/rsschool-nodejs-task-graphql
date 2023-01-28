@@ -2,11 +2,11 @@ import {
   GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull
 } from 'graphql';
 import { FastifyInstance } from 'fastify';
-import { memberType } from './memberType';
+import { MemberType } from './memberType';
 import { ProfileEntity } from '../../../utils/DB/entities/DBProfiles';
 import { validateId } from '../../../utils/uuidValidator';
 
-export const profileType = new GraphQLObjectType({
+export const ProfileType = new GraphQLObjectType({
   name  : 'Profile',
   fields: {
     id          : { type: GraphQLID },
@@ -19,19 +19,19 @@ export const profileType = new GraphQLObjectType({
     memberTypeId: { type: GraphQLString },
     userId      : { type: GraphQLID },
     memberType  : {
-      type: memberType,
+      type: MemberType,
       resolve: async (profile: ProfileEntity, args: Object, fastify: FastifyInstance) => fastify.db.memberTypes.findOne({ key: 'id', equals: profile.memberTypeId }),
     }
   },
 });
 
 export const profilesQuery = {
-  type   : new GraphQLList(profileType),
+  type   : new GraphQLList(ProfileType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.profiles.findMany(),
 };
 
 export const profileQuery = {
-  type   : profileType,
+  type   : ProfileType,
   args   : { id: { type: GraphQLID } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
     const profile = await fastify.db.profiles.findOne({ key: 'id', equals: id });
@@ -45,7 +45,7 @@ export const profileQuery = {
 
 export const profileMutations = {
   createProfile: {
-    type: profileType,
+    type: ProfileType,
     args: {
       avatar      : { type: GraphQLString },
       sex         : { type: GraphQLString },
@@ -78,7 +78,7 @@ export const profileMutations = {
     },
   },
   updateProfile: {
-    type: profileType,
+    type: ProfileType,
     args: {
       id          : { type: new GraphQLNonNull(GraphQLID) },
       avatar      : { type: GraphQLString },

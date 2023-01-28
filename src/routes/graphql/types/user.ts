@@ -3,13 +3,13 @@ import {
   GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull
 } from 'graphql';
 import { FastifyInstance } from 'fastify';
-import { profileType } from './profile';
-import { postType } from './post';
+import { ProfileType } from './profile';
+import { PostType } from './post';
 import { UserEntity } from '../../../utils/DB/entities/DBUsers';
 import { validateId } from '../../../utils/uuidValidator';
 
 // @ts-ignore
-export const userType = new GraphQLObjectType({
+export const UserType = new GraphQLObjectType({
   name  : 'User',
   fields: () => ({
     id                 : { type: GraphQLID },
@@ -18,31 +18,31 @@ export const userType = new GraphQLObjectType({
     email              : { type: GraphQLString },
     subscribedToUserIds: { type: new GraphQLList(GraphQLID) },
     posts              : {
-      type   : new GraphQLList(postType),
+      type   : new GraphQLList(PostType),
       resolve: async (user: UserEntity, args: Object, fastify: FastifyInstance) => fastify.db.posts.findMany({ key: 'userId', equals: user.id })
     },
     profile            : {
-      type   : profileType,
+      type   : ProfileType,
       resolve: async (user: UserEntity, args: Object, fastify: FastifyInstance) => fastify.db.profiles.findOne({ key: 'userId', equals: user.id }),
     },
     subscribedToUser   : {
-      type   : new GraphQLList(userType),
+      type   : new GraphQLList(UserType),
       resolve: async (user: UserEntity, args: Object, fastify: FastifyInstance) => fastify.db.users.findMany({ key: 'id', equalsAnyOf: user.subscribedToUserIds }),
     },
     userSubscribedTo   : {
-      type   : new GraphQLList(userType),
+      type   : new GraphQLList(UserType),
       resolve: async (user: UserEntity, args: Object, fastify: FastifyInstance) => fastify.db.users.findMany({ key: 'subscribedToUserIds', inArray: user.id }),
     },
   }),
 });
 
 export const usersQuery = {
-  type   : new GraphQLList(userType),
+  type   : new GraphQLList(UserType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.users.findMany(),
 };
 
 export const userQuery = {
-  type   : userType,
+  type   : UserType,
   args   : { id: { type: GraphQLID } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
     const user = await fastify.db.users.findOne({ key: 'id', equals: id })
@@ -56,7 +56,7 @@ export const userQuery = {
 
 export const userMutations = {
   createUser: {
-    type   : userType,
+    type   : UserType,
     args   : {
       firstName: { type: GraphQLString },
       lastName : { type: GraphQLString },
@@ -65,7 +65,7 @@ export const userMutations = {
     resolve: async (_: any, userDTO: Omit<UserEntity, 'id' | 'subscribedToUserIds'>, fastify: FastifyInstance) => fastify.db.users.create(userDTO),
   },
   updateUser: {
-    type   : userType,
+    type   : UserType,
     args   : {
       id       : { type: new GraphQLNonNull(GraphQLID) },
       firstName: { type: GraphQLString },
@@ -86,7 +86,7 @@ export const userMutations = {
     },
   },
   subscribeTo: {
-    type   : userType,
+    type   : UserType,
     args   : {
       id    : { type: new GraphQLNonNull(GraphQLID) },
       userId: { type: new GraphQLNonNull(GraphQLID) },
@@ -119,7 +119,7 @@ export const userMutations = {
     },
   },
   unsubscribeFrom: {
-    type: userType,
+    type: UserType,
     args: {
       id    : { type: new GraphQLNonNull(GraphQLID) },
       userId: { type: new GraphQLNonNull(GraphQLID) },

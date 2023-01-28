@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { PostEntity } from '../../../utils/DB/entities/DBPosts';
 import { validateId } from '../../../utils/uuidValidator';
 
-export const postType = new GraphQLObjectType({
+export const PostType = new GraphQLObjectType({
   name  : 'Post',
   fields: {
     id     : { type: GraphQLID },
@@ -14,12 +14,12 @@ export const postType = new GraphQLObjectType({
 });
 
 export const postsQuery = {
-  type   : new GraphQLList(postType),
+  type   : new GraphQLList(PostType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.posts.findMany(),
 };
 
 export const postQuery = {
-  type   : postType,
+  type   : PostType,
   args   : { id: { type: GraphQLID } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
     const post = await fastify.db.posts.findOne({ key: 'id', equals: id });
@@ -33,7 +33,7 @@ export const postQuery = {
 
 export const postMutations = {
   createPost: {
-    type: postType,
+    type: PostType,
     args: {
       title  : { type: GraphQLString },
       content: { type: GraphQLString },
@@ -51,7 +51,7 @@ export const postMutations = {
     },
   },
   updatePost: {
-    type: postType,
+    type: PostType,
     args: {
       id     : { type: new GraphQLNonNull(GraphQLID) },
       title  : { type: GraphQLString },

@@ -1,8 +1,10 @@
-import { GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString,
+} from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { MemberTypeEntity } from '../../../utils/DB/entities/DBMemberTypes';
 
-export const memberType = new GraphQLObjectType({
+export const MemberType = new GraphQLObjectType({
   name  : 'MemberType',
   fields: {
     id             : { type: GraphQLString },
@@ -12,12 +14,12 @@ export const memberType = new GraphQLObjectType({
 });
 
 export const memberTypesQuery = {
-  type   : new GraphQLList(memberType),
+  type   : new GraphQLList(MemberType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.memberTypes.findMany(),
 };
 
 export const memberTypeQuery = {
-  type   : memberType,
+  type   : MemberType,
   args   : { id: { type: GraphQLString } },
   resolve: async (_: any, { id }: Record<'id', string>, fastify: FastifyInstance) => {
     const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: id })
@@ -31,7 +33,7 @@ export const memberTypeQuery = {
 
 export const memberTypeMutations = {
   updateMemberType: {
-    type: memberType,
+    type: MemberType,
     args: {
       id             : { type: new GraphQLNonNull(GraphQLString) },
       discount       : { type: GraphQLInt },
