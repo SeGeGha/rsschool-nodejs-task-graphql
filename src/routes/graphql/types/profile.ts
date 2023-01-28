@@ -1,5 +1,5 @@
 import {
-  GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull
+  GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType
 } from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { MemberType } from './memberType';
@@ -25,6 +25,34 @@ export const ProfileType = new GraphQLObjectType({
   },
 });
 
+const CreateProfileInputType = new GraphQLInputObjectType({
+  name  : 'CreateProfileInput',
+  fields: {
+    avatar      : { type: GraphQLString },
+    sex         : { type: GraphQLString },
+    birthday    : { type: GraphQLInt },
+    country     : { type: GraphQLString },
+    street      : { type: GraphQLString },
+    city        : { type: GraphQLString },
+    memberTypeId: { type: GraphQLString },
+    userId      : { type: GraphQLID },
+  },
+});
+
+const ChangeProfileInputType = new GraphQLInputObjectType({
+  name  : 'ChangeProfileInput',
+  fields: {
+    id          : { type: new GraphQLNonNull(GraphQLID) },
+    avatar      : { type: GraphQLString },
+    sex         : { type: GraphQLString },
+    birthday    : { type: GraphQLInt },
+    country     : { type: GraphQLString },
+    street      : { type: GraphQLString },
+    city        : { type: GraphQLString },
+    memberTypeId: { type: GraphQLString },
+  },
+});
+
 export const profilesQuery = {
   type   : new GraphQLList(ProfileType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.profiles.findMany(),
@@ -43,20 +71,19 @@ export const profileQuery = {
   },
 };
 
+type CreateProfileArgs = Record<'data', Omit<ProfileEntity, 'id'>>
+type ChangeProfileArgs = Record<'data', Record<'id', string> & Partial<Omit<ProfileEntity, 'id' | 'userId'>>>
+
 export const profileMutations = {
   createProfile: {
     type: ProfileType,
     args: {
-      avatar      : { type: GraphQLString },
-      sex         : { type: GraphQLString },
-      birthday    : { type: GraphQLInt },
-      country     : { type: GraphQLString },
-      street      : { type: GraphQLString },
-      city        : { type: GraphQLString },
-      memberTypeId: { type: GraphQLString },
-      userId      : { type: GraphQLID },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(CreateProfileInputType),
+      },
     },
-    resolve: async (_: any, profileDTO: Omit<ProfileEntity, 'id'>, fastify: FastifyInstance) => {
+    resolve: async (_: any, { data: profileDTO }: CreateProfileArgs, fastify: FastifyInstance) => {
       const { memberTypeId, userId } = profileDTO;
 
       const user = await fastify.db.users.findOne({ key: 'id', equals: userId });
@@ -80,17 +107,13 @@ export const profileMutations = {
   updateProfile: {
     type: ProfileType,
     args: {
-      id          : { type: new GraphQLNonNull(GraphQLID) },
-      avatar      : { type: GraphQLString },
-      sex         : { type: GraphQLString },
-      birthday    : { type: GraphQLInt },
-      country     : { type: GraphQLString },
-      street      : { type: GraphQLString },
-      city        : { type: GraphQLString },
-      memberTypeId: { type: GraphQLString },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(ChangeProfileInputType),
+      }
     },
-    resolve: async (_: any, args: Record<'id', string> & Partial<Omit<ProfileEntity, 'id' | 'userId'>>, fastify: FastifyInstance) => {
-      const { id, ...profileDTO } = args;
+    resolve: async (_: any, args: ChangeProfileArgs, fastify: FastifyInstance) => {
+      const { id, ...profileDTO } = args.data;
       if (!validateId(id)) {
         throw fastify.httpErrors.badRequest(`Invalid profile id - ${id}`);
       }

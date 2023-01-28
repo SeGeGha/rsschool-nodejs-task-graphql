@@ -1,6 +1,6 @@
 import * as lodash from 'lodash';
 import {
-  GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull
+  GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType
 } from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { ProfileType } from './profile';
@@ -36,6 +36,25 @@ export const UserType = new GraphQLObjectType({
   }),
 });
 
+const CreateUserType = new GraphQLInputObjectType({
+  name: 'CreateUserInput',
+  fields: {
+    firstName: { type: GraphQLString },
+    lastName : { type: GraphQLString },
+    email    : { type: GraphQLString },
+  },
+});
+
+const ChangeUserType = new GraphQLInputObjectType({
+  name: 'ChangeUserInput',
+  fields: {
+    id       : { type: new GraphQLNonNull(GraphQLID) },
+    firstName: { type: GraphQLString },
+    lastName : { type: GraphQLString },
+    email    : { type: GraphQLString },
+  },
+});
+
 export const usersQuery = {
   type   : new GraphQLList(UserType),
   resolve: async (_: any, args: Object, fastify: FastifyInstance) => fastify.db.users.findMany(),
@@ -54,26 +73,30 @@ export const userQuery = {
   },
 };
 
+type CreateUserArgs = Record<'data', Omit<UserEntity, 'id' | 'subscribedToUserIds'>>
+type ChangeUserArgs = Record<'data', Record<'id', string> & Partial<Omit<UserEntity, 'id'>>>
+
 export const userMutations = {
   createUser: {
     type   : UserType,
     args   : {
-      firstName: { type: GraphQLString },
-      lastName : { type: GraphQLString },
-      email    : { type: GraphQLString },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(CreateUserType),
+      }
     },
-    resolve: async (_: any, userDTO: Omit<UserEntity, 'id' | 'subscribedToUserIds'>, fastify: FastifyInstance) => fastify.db.users.create(userDTO),
+    resolve: async (_: any, { data: userDTO }: CreateUserArgs, fastify: FastifyInstance) => fastify.db.users.create(userDTO),
   },
   updateUser: {
     type   : UserType,
     args   : {
-      id       : { type: new GraphQLNonNull(GraphQLID) },
-      firstName: { type: GraphQLString },
-      lastName : { type: GraphQLString },
-      email    : { type: GraphQLString },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(ChangeUserType),
+      }
     },
-    resolve: async (_: any, args: Record<'id', string> & Partial<Omit<UserEntity, 'id'>>, fastify: FastifyInstance) => {
-      const { id, ...userDTO } = args;
+    resolve: async (_: any, args: ChangeUserArgs, fastify: FastifyInstance) => {
+      const { id, ...userDTO } = args.data;
       if (!validateId(id)) {
         throw fastify.httpErrors.badRequest(`Invalid user id - ${id}`);
       }

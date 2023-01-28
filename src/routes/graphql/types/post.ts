@@ -1,4 +1,6 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLNonNull, GraphQLID, GraphQLList, GraphQLObjectType, GraphQLInputObjectType, GraphQLString
+} from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { PostEntity } from '../../../utils/DB/entities/DBPosts';
 import { validateId } from '../../../utils/uuidValidator';
@@ -10,6 +12,24 @@ export const PostType = new GraphQLObjectType({
     title  : { type: GraphQLString },
     content: { type: GraphQLString },
     userId : { type: GraphQLID },
+  },
+});
+
+const CreatePostInputType = new GraphQLInputObjectType({
+  name  : 'CreatePostInput',
+  fields: {
+    title  : { type: GraphQLString },
+    content: { type: GraphQLString },
+    userId : { type: GraphQLID },
+  },
+});
+
+const ChangePostInputType = new GraphQLInputObjectType({
+  name  : 'ChangePostInput',
+  fields: {
+    id     : { type: new GraphQLNonNull(GraphQLID) },
+    title  : { type: GraphQLString },
+    content: { type: GraphQLString },
   },
 });
 
@@ -31,15 +51,19 @@ export const postQuery = {
   },
 };
 
+type CreatePostArgs = Record<'data', Omit<PostEntity, 'id'>>
+type ChangePostArgs = Record<'data', Record<'id', string> & Partial<Omit<PostEntity, 'id' | 'userId'>>>
+
 export const postMutations = {
   createPost: {
     type: PostType,
     args: {
-      title  : { type: GraphQLString },
-      content: { type: GraphQLString },
-      userId : { type: GraphQLID },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(CreatePostInputType),
+      }
     },
-    resolve: async (_: any, postDTO: Omit<PostEntity, 'id'>, fastify: FastifyInstance) => {
+    resolve: async (_: any, { data: postDTO }: CreatePostArgs, fastify: FastifyInstance) => {
       const { userId } = postDTO;
 
       const user = await fastify.db.users.findOne({ key: 'id', equals: userId });
@@ -53,12 +77,13 @@ export const postMutations = {
   updatePost: {
     type: PostType,
     args: {
-      id     : { type: new GraphQLNonNull(GraphQLID) },
-      title  : { type: GraphQLString },
-      content: { type: GraphQLString },
+      data: {
+        name: 'data',
+        type: new GraphQLNonNull(ChangePostInputType),
+      }
     },
-    resolve: async (_: any, args: Record<'id', string> & Partial<Omit<PostEntity, 'id' | 'userId'>>, fastify: FastifyInstance) => {
-      const { id, ...postDTO } = args;
+    resolve: async (_: any, args: ChangePostArgs, fastify: FastifyInstance) => {
+      const { id, ...postDTO } = args.data;
       if (!validateId(id)) {
         throw fastify.httpErrors.badRequest(`Invalid post id - ${id}`);
       }
