@@ -60,8 +60,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
           query   : queryRootType,
           mutation: mutationRootType,
         }),
-        source        : String(request.body.query),
-        variableValues: request.body.variables,
+        source        : String((request.body as Record<'query', string>).query),
+        variableValues: (request.body as Record<'variables', Record<string, unknown>>).variables,
         contextValue  : fastify,
       });
     }
