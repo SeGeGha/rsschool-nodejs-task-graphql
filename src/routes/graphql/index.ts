@@ -2,7 +2,7 @@ import { graphql, GraphQLSchema, GraphQLObjectType } from 'graphql';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
 import {
-  usersQuery, userQuery,
+  usersQuery, userQuery, userMutations,
   profilesQuery, profileQuery,
   postsQuery, postQuery,
   memberTypesQuery, memberTypeQuery,
@@ -25,6 +25,13 @@ const queryRootType = new GraphQLObjectType({
   },
 });
 
+const mutationRootType = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    createUser: userMutations.createUser,
+  }
+});
+
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
@@ -39,7 +46,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       return await graphql({
         schema        : new GraphQLSchema({
           query   : queryRootType,
-          mutation: null,
+          mutation: mutationRootType,
         }),
         source        : String(request.body.query),
         variableValues: request.body.variables,
