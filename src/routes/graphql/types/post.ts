@@ -1,6 +1,7 @@
-import { GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { PostEntity } from '../../../utils/DB/entities/DBPosts';
+import { validateId } from '../../../utils/uuidValidator';
 
 export const postType = new GraphQLObjectType({
   name  : 'Post',
@@ -40,6 +41,26 @@ export const postMutations = {
       }
 
       return fastify.db.posts.create(postDTO);
+    },
+  },
+  updatePost: {
+    type: postType,
+    args: {
+      id     : { type: new GraphQLNonNull(GraphQLID) },
+      title  : { type: GraphQLString },
+      content: { type: GraphQLString },
+    },
+    resolve: async (_: any, args: Record<'id', string> & Partial<Omit<PostEntity, 'id' | 'userId'>>, fastify: FastifyInstance) => {
+      const { id, ...postDTO } = args;
+      if (!validateId(id)) {
+        throw fastify.httpErrors.badRequest(`Invalid post id - ${id}`);
+      }
+
+      try {
+        return await fastify.db.posts.change(id, postDTO);
+      } catch (error) {
+        throw fastify.httpErrors.notFound(`Post with id ${id} not found`);
+      }
     },
   },
 };
