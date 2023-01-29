@@ -1,6 +1,6 @@
 import * as lodash from 'lodash';
 import {
-  GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType
+  GraphQLID, GraphQLList, GraphQLObjectType, GraphQLOutputType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType
 } from 'graphql';
 import { FastifyInstance } from 'fastify';
 import { ProfileType } from './profile';
@@ -8,8 +8,7 @@ import { PostType } from './post';
 import { UserEntity } from '../../../utils/DB/entities/DBUsers';
 import { validateId } from '../../../utils/uuidValidator';
 
-// @ts-ignore
-export const UserType = new GraphQLObjectType({
+export const UserType: GraphQLOutputType  = new GraphQLObjectType({
   name  : 'User',
   fields: () => ({
     id                 : { type: GraphQLID },
@@ -120,6 +119,10 @@ export const userMutations = {
       [ id, userId ].forEach(uuid => {
         if (!validateId(uuid)) throw fastify.httpErrors.badRequest(`Invalid user id - ${id}`);
       });
+
+      if (id === userId) {
+        throw fastify.httpErrors.badRequest('You can not subscribe to yourself');
+      }
 
       const users = await fastify.db.users.findMany({ key: 'id', equalsAnyOf: [ id, userId ] });
       const subscriber = users.find(user => user.id === id);

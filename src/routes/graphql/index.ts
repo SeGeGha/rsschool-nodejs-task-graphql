@@ -1,5 +1,6 @@
 import * as depthLimit from 'graphql-depth-limit';
 import { graphql, GraphQLSchema, GraphQLObjectType, validate, parse } from 'graphql';
+import { Maybe } from 'graphql/jsutils/Maybe';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
 import {
@@ -57,7 +58,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply) {
-      let { query, variables } = request.body;
+      let { query, variables } = request.body as { query: string | undefined, variables: Maybe<Record<string, unknown>>}; // types for app start on Linux
       query = String(query);
 
       const schema = new GraphQLSchema({
