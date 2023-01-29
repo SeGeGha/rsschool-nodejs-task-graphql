@@ -1,4 +1,5 @@
-import { graphql, GraphQLSchema, GraphQLObjectType } from 'graphql';
+import * as depthLimit from 'graphql-depth-limit';
+import { graphql, GraphQLSchema, GraphQLObjectType, validate, parse } from 'graphql';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
 import {
@@ -7,6 +8,7 @@ import {
   postsQuery, postQuery, postMutations,
   memberTypesQuery, memberTypeQuery,memberTypeMutations
 } from './types';
+import { MAX_DEPTH_LIMIT } from '../../constants';
 
 const queryRootType = new GraphQLObjectType({
   name  : 'Query',
@@ -55,13 +57,26 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply) {
+      let { query, variables } = request.body;
+      query = String(query);
+
+      const schema = new GraphQLSchema({
+        query   : queryRootType,
+        mutation: mutationRootType,
+      });
+
+      const errors = validate(schema, parse(query), [ depthLimit(MAX_DEPTH_LIMIT) ]);
+      if (errors.length) {
+        return {
+          errors,
+          data: null,
+        };
+      }
+
       return await graphql({
-        schema        : new GraphQLSchema({
-          query   : queryRootType,
-          mutation: mutationRootType,
-        }),
-        source        : String((request.body as Record<'query', string>).query),
-        variableValues: (request.body as Record<'variables', Record<string, unknown>>).variables,
+        schema,
+        source        : query,
+        variableValues: variables,
         contextValue  : fastify,
       });
     }
